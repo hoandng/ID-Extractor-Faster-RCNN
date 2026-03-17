@@ -1,0 +1,8 @@
+gen_step: card_to_corner
+
+card_weights: weights/card/best.pth
+score_thresh: 0.4
+
+img_dir: dataset/card/images_2
+
+out_img_dir: dataset/corner/images_2

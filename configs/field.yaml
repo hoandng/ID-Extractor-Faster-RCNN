@@ -1,0 +1,21 @@
+img_dir:     dataset/field/images
+ann_dir:     dataset/field/annotations
+
+num_classes: 9
+class_map:
+  id:        1
+  hoten:     2
+  ngaysinh:  3
+  gioitinh:  4
+  quoctich:  5
+  quequan:   6
+  diachi:    7
+  giatriden: 8
+
+epochs:      60
+batch_size:  2
+lr:          0.003
+max_size:    1000      # tăng lên để nhìn rõ chữ hơn
+score_thresh: 0.35
+
+weights_dir: weights/field

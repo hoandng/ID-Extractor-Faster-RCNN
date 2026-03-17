@@ -1,0 +1,17 @@
+img_dir:     dataset/corner/images
+ann_dir:     dataset/corner/annotations
+
+num_classes: 5          # 4 góc + 1 background
+class_map:
+  top_left:       1
+  top_right:      2
+  bottom_right:   3
+  bottom_left:    4
+
+epochs:      60
+batch_size:  2
+lr:          0.005
+max_size:    800
+score_thresh: 0.35
+
+weights_dir: weights/corner

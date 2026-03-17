@@ -1,0 +1,7 @@
+gen_step: corner_to_field
+
+corner_weights: weights/corner/best.pth
+score_thresh: 0.4
+
+img_dir: dataset/corner/images_2
+out_img_dir: dataset/field/images_2

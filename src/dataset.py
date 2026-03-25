@@ -1,23 +1,3 @@
-"""
-dataset.py
-----------
-Đọc dataset Pascal VOC (ảnh + file XML) và trả về đúng format
-mà Faster R-CNN cần.
-
-Faster R-CNN cần mỗi sample trả về:
-  - image:  Tensor [C, H, W], float32, normalize ImageNet
-  - target: dict {"boxes": Tensor[N,4], "labels": Tensor[N]}
-
-Cách dùng:
-    from dataset import make_dataloaders
-
-    train_loader, val_loader = make_dataloaders(
-        img_dir   = "dataset/images",
-        ann_dir   = "dataset/annotations",
-        class_map = {"cccd": 1},
-    )
-"""
-
 import random
 import xml.etree.ElementTree as ET
 from pathlib import Path

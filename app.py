@@ -1,18 +1,3 @@
-"""
-app.py
-Giao dien web cho he thong CCCD bang Streamlit.
-
-Cai dat:
-    pip install streamlit
-
-Chay local:
-    streamlit run app.py
-
-Deploy Streamlit Cloud:
-    1. Push code len GitHub
-    2. Vao streamlit.io -> New app -> chon repo -> main file: app.py
-"""
-
 import json
 import time
 from pathlib import Path
@@ -27,7 +12,6 @@ from PIL import Image
 # ─────────────────────────────────────────────────────────
 st.set_page_config(
     page_title = "CCCD Extractor",
-    page_icon  = "🪪",
     layout     = "wide",
 )
 
@@ -122,7 +106,7 @@ FIELD_ORDER = [
 # Trang 1: OCR
 # ─────────────────────────────────────────────────────────
 def page_ocr():
-    st.title("🪪 CCCD Extractor")
+    st.title("")
     st.caption("Tải ảnh CCCD lên để trích xuất thông tin tự động")
 
     # Load model
@@ -134,14 +118,14 @@ def page_ocr():
         st.info("Hãy chắc chắn đã train xong và có file weights/*/best.pth")
         return
 
-    st.success("✅ Model sẵn sàng", icon="✅")
+    st.success("Model sẵn sàng", icon="✅")
     st.divider()
 
     # ── Khu vuc upload ──────────────────────────────────
     col_upload, col_result = st.columns([1, 1], gap="large")
 
     with col_upload:
-        st.subheader("📤 Upload ảnh")
+        st.subheader("Upload ảnh")
         uploaded = st.file_uploader(
             label       = "Kéo thả hoặc click để chọn ảnh",
             type        = ["jpg", "jpeg", "png"],
@@ -154,7 +138,7 @@ def page_ocr():
             st.image(img_pil, caption="Ảnh đã upload", use_container_width=True)
 
             # Nut xu ly
-            if st.button("🔍 Trích xuất thông tin",
+            if st.button("Trích xuất thông tin",
                          type="primary", use_container_width=True):
                 # Chuyen PIL -> numpy BGR cho OpenCV
                 img_np  = np.array(img_pil.convert("RGB"))
@@ -172,7 +156,7 @@ def page_ocr():
 
     # ── Hien thi ket qua ─────────────────────────────────
     with col_result:
-        st.subheader("📋 Kết quả")
+        st.subheader("Kết quả")
 
         if "result" not in st.session_state:
             st.info("Upload ảnh và nhấn **Trích xuất** để xem kết quả")
@@ -184,7 +168,7 @@ def page_ocr():
 
         # Hien thi trang thai
         if status == "success":
-            st.markdown('<span class="badge-success">✅ Thành công</span>',
+            st.markdown('<span class="badge-success"> Thành công</span>',
                         unsafe_allow_html=True)
             st.caption(f"⏱ Thời gian xử lý: {elapsed:.2f}s")
             st.divider()
@@ -204,7 +188,7 @@ def page_ocr():
 
             # Nut copy JSON
             st.download_button(
-                label     = "⬇️ Tải kết quả JSON",
+                label     = "Tải kết quả JSON",
                 data      = json.dumps(data, ensure_ascii=False, indent=2),
                 file_name = "cccd_result.json",
                 mime      = "application/json",
@@ -230,69 +214,11 @@ def page_ocr():
             if "message" in result:
                 st.code(result["message"])
 
-    # ── Batch processing ─────────────────────────────────
-    st.divider()
-    with st.expander("📦 Xử lý nhiều ảnh cùng lúc (Batch)"):
-        batch_files = st.file_uploader(
-            "Chọn nhiều ảnh",
-            type            = ["jpg", "jpeg", "png"],
-            accept_multiple_files = True,
-            key             = "batch",
-        )
-        if batch_files and st.button("▶️ Chạy Batch", type="primary"):
-            results_batch = []
-            bar = st.progress(0, text="Đang xử lý...")
-
-            for i, f in enumerate(batch_files):
-                img_np  = np.array(Image.open(f).convert("RGB"))
-                img_bgr = cv2.cvtColor(img_np, cv2.COLOR_RGB2BGR)
-                res     = pipe.run(img_bgr)
-                results_batch.append({
-                    "file":   f.name,
-                    "status": res["status"],
-                    "data":   res.get("data", {}),
-                })
-                bar.progress((i + 1) / len(batch_files),
-                             text=f"Đang xử lý {i+1}/{len(batch_files)}...")
-
-            bar.empty()
-            st.success(f"Hoàn thành {len(results_batch)} ảnh!")
-
-            # Hien thi bang ket qua
-            ok    = [r for r in results_batch if r["status"] == "success"]
-            fail  = [r for r in results_batch if r["status"] != "success"]
-            st.metric("Thành công", len(ok))
-            st.metric("Thất bại",   len(fail))
-
-            if ok:
-                # Tao bang CSV de download
-                import csv, io
-                buf = io.StringIO()
-                fieldnames = ["file"] + FIELD_ORDER
-                writer = csv.DictWriter(buf, fieldnames=fieldnames)
-                writer.writeheader()
-                for r in ok:
-                    row = {"file": r["file"]}
-                    row.update({k: r["data"].get(k, "") for k in FIELD_ORDER})
-                    writer.writerow(row)
-                st.download_button(
-                    "⬇️ Tải kết quả CSV",
-                    data      = buf.getvalue(),
-                    file_name = "batch_results.csv",
-                    mime      = "text/csv",
-                )
-
-            if fail:
-                st.warning("Ảnh xử lý thất bại:")
-                for r in fail:
-                    st.write(f"- `{r['file']}`: {r['status']}")
-
-
 # ─────────────────────────────────────────────────────────
 # Trang 2: Training Results
 # ─────────────────────────────────────────────────────────
 def page_training():
-    st.title("📊 Training Results")
+    st.title("Training Results")
     st.caption("Xem kết quả và đồ thị quá trình huấn luyện")
 
     # Danh sach model
@@ -321,9 +247,9 @@ def page_training():
         # Hien thi do thi
         if has_plot or has_kfold:
             tab_labels = []
-            if has_plot:  tab_labels.append("📈 Epoch Chart")
-            if has_kfold: tab_labels.append("🔁 K-Fold Results")
-            if has_summary: tab_labels.append("📄 K-Fold Summary")
+            if has_plot:  tab_labels.append("Epoch Chart")
+            if has_kfold: tab_labels.append("K-Fold Results")
+            if has_summary: tab_labels.append("K-Fold Summary")
 
             tabs = st.tabs(tab_labels)
             t = 0
@@ -370,34 +296,17 @@ def page_training():
 # ─────────────────────────────────────────────────────────
 def main():
     with st.sidebar:
-        st.image("https://upload.wikimedia.org/wikipedia/commons/"
-                 "thumb/2/21/Flag_of_Vietnam.svg/320px-Flag_of_Vietnam.svg.png",
-                 width=60)
-        st.title("CCCD Extractor")
-        st.caption("Hệ thống nhận dạng CCCD tự động")
+        st.title("ID Extractor")
+        st.caption("Hệ thống trích xuất thông tin CCCD tự động")
         st.divider()
 
         page = st.radio(
             "Chọn chức năng",
-            options = ["🪪 Trích xuất OCR", "📊 Kết quả Training"],
+            options = ["Trích xuất OCR", "Kết quả Training"],
             label_visibility = "collapsed",
         )
 
-        st.divider()
-        st.markdown("**Hướng dẫn nhanh:**")
-        st.markdown("""
-        1. Train model theo thứ tự:
-```
-           card → corner → field
-```
-        2. Upload ảnh CCCD
-        3. Nhấn Trích xuất
-        """)
-
-        st.divider()
-        st.caption("Built with Streamlit + PyTorch")
-
-    if page == "🪪 Trích xuất OCR":
+    if page == "Trích xuất OCR":
         page_ocr()
     else:
         page_training()

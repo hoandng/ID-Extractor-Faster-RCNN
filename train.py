@@ -1,13 +1,3 @@
-"""
-train.py
-Vòng lặp huấn luyện Faster R-CNN cho bài toán nhận dạng CCCD.
-
-Cách chạy:
-    python train.py configs/card.yaml
-    python train.py configs/card.yaml --kfold 5
-    python train.py configs/card.yaml --resume weights/card/last.pth
-"""
-
 import argparse
 import random
 import shutil
@@ -26,9 +16,6 @@ from src.model import build_model
 from src.visualize import save_epoch_plot, save_kfold_plot, save_kfold_summary
 
 
-# ──────────────────────────────────────────────
-# Train & Validate
-# ──────────────────────────────────────────────
 
 def train_one_epoch(model, dataloader, optimizer, device):
     """Train qua toàn bộ tập train 1 lần. Trả về loss trung bình."""
@@ -230,13 +217,7 @@ def train_kfold(cfg, device, k):
     save_kfold_plot(all_histories, cfg["weights_dir"], k)
     save_kfold_summary(all_histories, all_maps, cfg["weights_dir"],
                        k, Path(cfg["weights_dir"]).name)
-    print(f"\n  tensorboard --logdir {cfg['weights_dir']}"
-          f"  →  http://localhost:6006")
 
-
-# ──────────────────────────────────────────────
-# Entry point
-# ──────────────────────────────────────────────
 
 def main():
     parser = argparse.ArgumentParser()
@@ -252,8 +233,6 @@ def main():
         train_kfold(cfg, device, args.kfold)
     else:
         train_normal(cfg, device, args)
-
-    print("\n→ Bước tiếp theo: python gen_data.py configs/gen_card.yaml")
 
 
 if __name__ == "__main__":

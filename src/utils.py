@@ -13,7 +13,7 @@ def preprocess_image(img_bgr):
     Chuyen anh BGR (numpy) sang tensor chuan cho Faster R-CNN.
     - BGR -> RGB
     - uint8 [0,255] -> float [0,1]
-    - Normalize voi mean/std ImageNet (vi backbone pretrained tren ImageNet)
+    - Normalize voi mean/std ImageNet
     """
     img_rgb = cv2.cvtColor(img_bgr, cv2.COLOR_BGR2RGB)
     tensor  = TF.to_tensor(img_rgb)
@@ -35,30 +35,11 @@ def add_padding(img, pad_size=50, mode='pixel'):
         top = bottom = left = right = int(pad_size)
 
     # Thêm viền
-    padded_img = cv2.copyMakeBorder(
-        img,
-        top, bottom, left, right,
-        cv2.BORDER_CONSTANT,
-        value=[0, 0, 0]
-    )
+    padded_img = cv2.copyMakeBorder(img, top, bottom, left, right, cv2.BORDER_CONSTANT, value=[0, 0, 0])
     return padded_img
 
 
 def warp_perspective(img, corners):
-    """
-    Can chinh anh CCCD ve goc nhin thang bang perspective transform.
-    Giong nhu 'ep phang' anh chup nghieng.
-
-    Args:
-        corners: dict {
-            "top_left":     (cx, cy),
-            "top_right":    (cx, cy),
-            "bottom_right": (cx, cy),
-            "bottom_left":  (cx, cy),
-        }
-    Returns:
-        Anh da warp, hoac None neu thieu goc.
-    """
     required = ["top_left", "top_right", "bottom_right", "bottom_left"]
     if not all(k in corners for k in required):
         return None

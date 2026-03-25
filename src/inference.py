@@ -1,18 +1,3 @@
-"""
-inference.py
-Pipeline 6 buoc trich xuat thong tin CCCD.
-
-Cach dung:
-    from inference import CCCDPipeline
-
-    pipe   = CCCDPipeline("weights/card/best.pth",
-                          "weights/corner/best.pth",
-                          "weights/field/best.pth")
-    result = pipe.run("anh_cccd.jpg")
-    print(result)
-    # {"status": "success", "data": {"hoten": "NGUYEN VAN A", ...}}
-"""
-
 import cv2
 import torch
 from PIL import Image
@@ -37,14 +22,10 @@ class CCCDPipeline:
             "cuda" if torch.cuda.is_available() else "cpu"
         )
         print(f"Loading models ({self.device})...")
-        self.card_model   = load_model(card_model,   num_classes=2,
-                                       device=self.device)
-        self.corner_model = load_model(corner_model, num_classes=5,
-                                       device=self.device,
-                                       score_thresh=0.35)
-        self.field_model  = load_model(field_model,  num_classes=9,
-                                       device=self.device,
-                                       score_thresh=0.35)
+        self.card_model   = load_model(card_model,   num_classes=2, device=self.device)
+        self.corner_model = load_model(corner_model, num_classes=5, device=self.device, score_thresh=0.35)
+        self.field_model  = load_model(field_model,  num_classes=9, device=self.device, score_thresh=0.35)
+
         from vietocr.tool.config import Cfg
         from vietocr.tool.predictor import Predictor
         ocr_cfg = Cfg.load_config_from_name("vgg_seq2seq")
@@ -68,6 +49,7 @@ class CCCDPipeline:
         x1, y1, x2, y2 = card_box
         cropped = padded[y1:y2, x1:x2]
         cropped = add_padding(cropped, pad_size=50, mode="pixel")
+
         # Buoc 3+4: Detect goc -> Warp
         corners = self._detect_corners(cropped)
         if len(corners) < 4:
@@ -129,20 +111,61 @@ class CCCDPipeline:
             fields[name].sort(key=lambda b: b[1])
         return fields
 
+    def _sort_boxes_left_to_right(self, boxes):
+        """
+        Sort theo Y truoc (dong tren xuong duoi),
+        trong cung dong thi sort theo X (trai sang phai).
+        """
+        if not boxes:
+            return boxes
+
+        # Tinh chieu cao trung binh de xac dinh "cung dong"
+        avg_h = sum(b[3] - b[1] for b in boxes) / len(boxes)
+        row_tol = avg_h * 0.6  # sai so chap nhan de coi la cung dong
+
+        # Nhom cac box thanh tung dong dua vao toa do Y
+        rows = []
+        sorted_by_y = sorted(boxes, key=lambda b: b[1])
+
+        for box in sorted_by_y:
+            placed = False
+            for row in rows:
+                # Lay Y trung binh cua dong hien tai
+                row_y = sum(b[1] for b in row) / len(row)
+                if abs(box[1] - row_y) < row_tol:
+                    row.append(box)
+                    placed = True
+                    break
+            if not placed:
+                rows.append([box])
+
+        # Trong moi dong: sort theo X (trai -> phai)
+        result = []
+        for row in rows:
+            result.extend(sorted(row, key=lambda b: b[0]))
+        return result
+
     def _run_ocr(self, img, fields):
         result = {}
+
         for name, boxes in fields.items():
+            sorted_boxes = self._sort_boxes_left_to_right(boxes)
             texts = []
-            for x1, y1, x2, y2 in boxes:
+            for x1, y1, x2, y2 in sorted_boxes:
                 crop = img[y1:y2, x1:x2]
                 if crop.size == 0:
                     continue
-                pil  = Image.fromarray(
+
+                # OCR
+                pil = Image.fromarray(
                     cv2.cvtColor(crop, cv2.COLOR_BGR2RGB)
                 )
                 text = self.ocr.predict(pil).strip()
+
                 if text:
                     texts.append(text)
+
             if texts:
                 result[name] = " ".join(texts)
+
         return result

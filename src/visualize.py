@@ -1,15 +1,3 @@
-"""
-visualize.py
-Vẽ và lưu tất cả đồ thị PNG phục vụ báo cáo.
-
-Hàm public:
-    plot_confusion_matrix(cm, class_names, title)  → Figure
-    save_epoch_plot(history, save_dir, label)       → results.png
-    save_kfold_plot(all_histories, save_dir, k)     → kfold_results.png
-    save_kfold_summary(all_histories, all_maps,
-                       save_dir, k, model_name)     → kfold_summary.txt
-"""
-
 from pathlib import Path
 
 import matplotlib

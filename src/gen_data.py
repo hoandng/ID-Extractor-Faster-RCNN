@@ -1,17 +1,3 @@
-"""
-gen_data.py
-Dung model da train de tu dong tao dataset cho model tiep theo.
-
-Luong:
-    Card model da train
-        python gen_data.py configs/gen_card.yaml
-    -> Crop + padding -> luu vao dataset_corner/
-
-    Corner model da train
-        python gen_data.py configs/gen_corner.yaml
-    -> Warp perspective -> luu vao dataset_field/
-"""
-
 import argparse
 import shutil
 import xml.etree.ElementTree as ET

@@ -1,13 +1,3 @@
-"""
-evaluate.py
-Đánh giá model sau khi train xong.
-Dùng torchmetrics — không viết công thức thủ công.
-
-Cách dùng:
-    from evaluate import full_evaluation
-    full_evaluation(model, val_loader, device, cfg, save_dir, writer)
-"""
-
 import json
 import time
 from pathlib import Path

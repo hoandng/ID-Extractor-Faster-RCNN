@@ -1,30 +1,3 @@
-"""
-model.py
---------
-Tạo và load model Faster R-CNN với backbone ResNet-18.
-
-Faster R-CNN hoạt động như thế nào?
-  1. Backbone (ResNet-18): đọc ảnh, trích xuất feature map
-  2. FPN: gộp feature map từ nhiều tầng → nhìn được cả vật lớn lẫn nhỏ
-  3. RPN: quét feature map, đề xuất ~2000 vùng có thể chứa object
-  4. ROI Pooling: crop feature map theo từng vùng đề xuất → tensor cố định
-  5. Head: phân loại từng vùng + tinh chỉnh tọa độ bbox
-
-Tại sao ResNet-18 thay vì ResNet-50 mặc định?
-  ResNet-50: ~25M tham số, cần ~2.2 GB VRAM
-  ResNet-18: ~12M tham số, cần ~1.4 GB VRAM
-  Với bài CCCD (ảnh chuẩn, ít class), ResNet-18 là đủ.
-
-Cách dùng:
-    from model import build_model, load_model
-
-    # Tạo model mới để train
-    model = build_model(num_classes=2)
-
-    # Load model đã train
-    model = load_model("weights/card/best.pth", num_classes=2)
-"""
-
 import torch
 import torchvision
 from torchvision.models.detection import FasterRCNN
@@ -35,12 +8,6 @@ from torchvision.ops import MultiScaleRoIAlign
 def build_model(num_classes, max_size=800, score_thresh=0.4):
     """
     Tao Faster R-CNN voi backbone ResNet-18 + FPN.
-
-    Args:
-        num_classes:  So class cua ban + 1 (background).
-                      Vi du: detect "cccd" -> num_classes = 2
-        max_size:     Canh dai nhat sau resize. Giam xuong neu het VRAM.
-        score_thresh: Chi giu detection co confidence > nguong nay.
     """
 
     # Backbone: ResNet-18 pretrained ImageNet + FPN
@@ -48,7 +15,7 @@ def build_model(num_classes, max_size=800, score_thresh=0.4):
     backbone = torchvision.models.detection.backbone_utils.resnet_fpn_backbone(
         backbone_name    = "resnet18",
         weights          = "DEFAULT",
-        trainable_layers = 3,      # unfreeze 3 layer cuoi de fine-tune
+        trainable_layers = 3,
     )
 
     # Anchor generator: cac "khung thu" dat day dac tren anh

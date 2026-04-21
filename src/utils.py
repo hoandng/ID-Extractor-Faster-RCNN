@@ -9,12 +9,6 @@ import torchvision.transforms.functional as TF
 
 
 def preprocess_image(img_bgr):
-    """
-    Chuyen anh BGR (numpy) sang tensor chuan cho Faster R-CNN.
-    - BGR -> RGB
-    - uint8 [0,255] -> float [0,1]
-    - Normalize voi mean/std ImageNet
-    """
     img_rgb = cv2.cvtColor(img_bgr, cv2.COLOR_BGR2RGB)
     tensor  = TF.to_tensor(img_rgb)
     tensor  = TF.normalize(tensor,
@@ -27,14 +21,12 @@ def add_padding(img, pad_size=50, mode='pixel'):
 
     h, w = img.shape[:2]
 
-    # Tính toán kích thước viền
     if mode == 'percent':
         top = bottom = int(h * pad_size)
         left = right = int(w * pad_size)
     else:
         top = bottom = left = right = int(pad_size)
 
-    # Thêm viền
     padded_img = cv2.copyMakeBorder(img, top, bottom, left, right, cv2.BORDER_CONSTANT, value=[0, 0, 0])
     return padded_img
 
@@ -53,15 +45,12 @@ def warp_perspective(img, corners):
     h = int(max(np.linalg.norm(bl - tl), np.linalg.norm(br - tr)))
     w, h = max(w, 32), max(h, 32)
 
-    # Neu anh dang doc -> xoay 90 thanh ngang
-    # CCCD tieu chuan luon nam ngang (landscape)
     if h > w:
         w, h    = h, w
         src_pts = np.array([bl, tl, tr, br], dtype=np.float32)
     else:
         src_pts = np.array([tl, tr, br, bl], dtype=np.float32)
 
-    # Ti le chuan CCCD: 85.6mm x 53.98mm = 1.586
     RATIO = 1.586
     if w / h > RATIO:
         h = int(w / RATIO)

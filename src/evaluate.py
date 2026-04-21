@@ -14,13 +14,6 @@ from src.visualize import plot_confusion_matrix
 
 @torch.no_grad()
 def full_evaluation(model, dataloader, device, cfg, save_dir, writer=None):
-    """
-    Tính và lưu toàn bộ metrics đánh giá:
-        - mAP@0.5, mAP@0.5:0.95, mAR@100
-        - Confusion Matrix  →  confusion_matrix.png
-        - Inference Time (FPS, ms/ảnh)
-        - evaluation_report.txt + .json
-    """
     model.eval()
     save_dir    = Path(save_dir)
     class_names = list(cfg["class_map"].keys())
@@ -62,7 +55,6 @@ def full_evaluation(model, dataloader, device, cfg, save_dir, writer=None):
               "labels": t["labels"].cpu()} for t in targets],
         )
 
-        # Confusion Matrix: ghép predicted label với gt label khớp nhất
         for pred, target in zip(preds, targets):
             pb = pred["boxes"].cpu()
             pl = pred["labels"].cpu()
@@ -79,7 +71,6 @@ def full_evaluation(model, dataloader, device, cfg, save_dir, writer=None):
                     matched_gts.append(
                         gl[gi].clamp(0, num_classes - 1))
 
-    # Tổng hợp
     r      = map_metric.compute()
     map_50 = round(r["map_50"].item(), 4)
     map_   = round(r["map"].item(),    4)
@@ -87,7 +78,6 @@ def full_evaluation(model, dataloader, device, cfg, save_dir, writer=None):
     avg_ms = round(sum(times) / len(times), 1) if times else 0
     fps    = round(1000 / avg_ms, 1)            if avg_ms > 0 else 0
 
-    # Confusion Matrix PNG
     if matched_preds:
         confmat.update(torch.stack(matched_preds),
                        torch.stack(matched_gts))
@@ -104,7 +94,6 @@ def full_evaluation(model, dataloader, device, cfg, save_dir, writer=None):
         plt.close(fig)
         print("  [OK] confusion_matrix.png")
 
-    # TensorBoard
     if writer:
         writer.add_scalar("Eval/mAP@0.5",      map_50, 0)
         writer.add_scalar("Eval/mAP@0.5:0.95", map_,   0)

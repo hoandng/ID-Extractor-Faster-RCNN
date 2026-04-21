@@ -6,7 +6,7 @@ pipe   = CCCDPipeline(
     field_model  = "weights/field/best.pth",
 )
 
-result = pipe.run("dataset/test/raw/2004.jpg")
+result = pipe.run("path/to/image.jpg")
 
 if result["status"] == "success":
     for field, text in result["data"].items():

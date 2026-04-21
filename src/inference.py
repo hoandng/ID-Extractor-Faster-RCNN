@@ -14,7 +14,6 @@ FIELD_LABELS = {
     5: "quoctich", 6: "quequan",  7: "diachi",   8: "giatriden",
 }
 
-
 class CCCDPipeline:
 
     def __init__(self, card_model, corner_model, field_model, device=None):
@@ -41,7 +40,6 @@ class CCCDPipeline:
         if img is None:
             return {"status": "error", "message": "Khong doc duoc anh"}
 
-        # Buoc 1+2: Detect the -> Crop
         padded   = add_padding(img, pad_size= 50, mode="pixel")
         card_box = self._detect_card(padded)
         if card_box is None:
@@ -50,7 +48,6 @@ class CCCDPipeline:
         cropped = padded[y1:y2, x1:x2]
         cropped = add_padding(cropped, pad_size=50, mode="pixel")
 
-        # Buoc 3+4: Detect goc -> Warp
         corners = self._detect_corners(cropped)
         if len(corners) < 4:
             return {"status": "corners_missing", "found": list(corners)}
@@ -58,12 +55,10 @@ class CCCDPipeline:
         if warped is None:
             return {"status": "warp_failed"}
 
-        # Buoc 5: Detect truong thong tin
         fields = self._detect_fields(warped)
         if not fields:
             return {"status": "no_fields"}
 
-        # Buoc 6: OCR
         data = self._run_ocr(warped, fields)
         return {"status": "success", "data": data}
 
@@ -112,25 +107,18 @@ class CCCDPipeline:
         return fields
 
     def _sort_boxes_left_to_right(self, boxes):
-        """
-        Sort theo Y truoc (dong tren xuong duoi),
-        trong cung dong thi sort theo X (trai sang phai).
-        """
         if not boxes:
             return boxes
 
-        # Tinh chieu cao trung binh de xac dinh "cung dong"
         avg_h = sum(b[3] - b[1] for b in boxes) / len(boxes)
-        row_tol = avg_h * 0.6  # sai so chap nhan de coi la cung dong
+        row_tol = avg_h * 0.6
 
-        # Nhom cac box thanh tung dong dua vao toa do Y
         rows = []
         sorted_by_y = sorted(boxes, key=lambda b: b[1])
 
         for box in sorted_by_y:
             placed = False
             for row in rows:
-                # Lay Y trung binh cua dong hien tai
                 row_y = sum(b[1] for b in row) / len(row)
                 if abs(box[1] - row_y) < row_tol:
                     row.append(box)
@@ -139,7 +127,6 @@ class CCCDPipeline:
             if not placed:
                 rows.append([box])
 
-        # Trong moi dong: sort theo X (trai -> phai)
         result = []
         for row in rows:
             result.extend(sorted(row, key=lambda b: b[0]))
@@ -156,7 +143,6 @@ class CCCDPipeline:
                 if crop.size == 0:
                     continue
 
-                # OCR
                 pil = Image.fromarray(
                     cv2.cvtColor(crop, cv2.COLOR_BGR2RGB)
                 )

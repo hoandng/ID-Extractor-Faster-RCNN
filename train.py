@@ -13,12 +13,11 @@ from tqdm import tqdm
 from src.dataset import CCCDDataset, collate_fn
 from src.evaluate import full_evaluation
 from src.model import build_model
-from src.visualize import save_epoch_plot, save_kfold_plot, save_kfold_summary
+from src.visualize import save_epoch_plot, save_kfold_plot
 
 
 
 def train_one_epoch(model, dataloader, optimizer, device):
-    """Train qua toàn bộ tập train 1 lần. Trả về loss trung bình."""
     model.train()
     total_loss = 0.0
     for images, targets in tqdm(dataloader, desc="  Train", leave=False):
@@ -32,7 +31,6 @@ def train_one_epoch(model, dataloader, optimizer, device):
 
 @torch.no_grad()
 def validate(model, dataloader, device):
-    """Tính mAP@0.5, mAP@0.5:0.95, mAR@100 bằng torchmetrics."""
     model.eval()
     metric = MeanAveragePrecision(iou_type="bbox")
     for images, targets in tqdm(dataloader, desc="  Val  ", leave=False):
@@ -50,18 +48,8 @@ def validate(model, dataloader, device):
             "mar_100": round(r["mar_100"].item(), 4)}
 
 
-# ──────────────────────────────────────────────
-# Vòng lặp train chính
-# ──────────────────────────────────────────────
-
 def run_training(model, train_loader, val_loader, cfg, device,
                  weights_dir, label=""):
-    """
-    Train từ epoch 1 đến khi early stopping hoặc hết epoch.
-    Sau mỗi epoch: log TB + lưu results.png + lưu checkpoint.
-    Sau khi xong: đánh giá đầy đủ (mAP, Confusion Matrix, FPS).
-    Trả về (best_map50, history).
-    """
     weights_dir = Path(weights_dir)
     weights_dir.mkdir(parents=True, exist_ok=True)
 
@@ -91,7 +79,6 @@ def run_training(model, train_loader, val_loader, cfg, device,
         print(f"  loss={loss:.4f}  mAP@0.5={metrics['map_50']}"
               f"  mAP={metrics['map']}  mAR={metrics['mar_100']}")
 
-        # Log TensorBoard
         writer.add_scalar("Loss/train", loss, epoch)
         writer.add_scalar("Metrics/mAP@0.5", metrics["map_50"], epoch)
         writer.add_scalar("Metrics/mAP@0.5:0.95", metrics["map"], epoch)
@@ -135,11 +122,6 @@ def run_training(model, train_loader, val_loader, cfg, device,
                     weights_dir, writer=writer)
     writer.close()
     return best_map50, history
-
-
-# ──────────────────────────────────────────────
-# Train thường & K-Fold
-# ──────────────────────────────────────────────
 
 def _make_loaders(dataset, train_idx, val_idx, batch_size):
     return (
@@ -215,8 +197,6 @@ def train_kfold(cfg, device, k):
                  Path(cfg["weights_dir"]) / "best.pth")
 
     save_kfold_plot(all_histories, cfg["weights_dir"], k)
-    save_kfold_summary(all_histories, all_maps, cfg["weights_dir"],
-                       k, Path(cfg["weights_dir"]).name)
 
 
 def main():

@@ -10,10 +10,6 @@ from src.utils import preprocess_image
 
 
 def read_annotation(xml_path):
-    """
-    Doc file XML Pascal VOC.
-    Tra ve list: [{"name": "cccd", "bbox": [xmin,ymin,xmax,ymax]}, ...]
-    """
     root   = ET.parse(xml_path,
                       parser=ET.XMLParser(encoding="utf-8")).getroot()
     width  = int(float(root.find("size/width").text))
@@ -34,16 +30,6 @@ def read_annotation(xml_path):
 
 
 class CCCDDataset(Dataset):
-    """
-    Dataset doc anh + XML Pascal VOC.
-
-    class_map vi du:
-        Card model: {"cccd": 1}
-        Corner model: {"top_left":1, "top_right":2,
-                       "bottom_right":3, "bottom_left":4}
-        Field model: {"id":1, "hoten": 2, "ngaysinh":3, ...}
-    """
-
     def __init__(self, img_dir, ann_dir, class_map):
         self.class_map = class_map
         self.samples   = []
@@ -90,17 +76,12 @@ class CCCDDataset(Dataset):
 
 
 def collate_fn(batch):
-    """
-    Faster R-CNN nhan list, khong phai tensor.
-    Ham nay thay the default collate cua DataLoader.
-    """
     images, targets = zip(*batch)
     return list(images), list(targets)
 
 
 def make_dataloaders(img_dir, ann_dir, class_map,
                      batch_size=2, val_ratio=0.15):
-    """Tao train + val DataLoader, tu dong chia 85/15."""
     dataset = CCCDDataset(img_dir, ann_dir, class_map)
     indices = list(range(len(dataset)))
     random.seed(42)

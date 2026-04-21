@@ -1,0 +1,10 @@
+opencv-python
+vietocr
+torchmetrics
+tensorboard
+streamlit
+Pillow
+numpy
+pyyaml
+tqdm
+matplotlib

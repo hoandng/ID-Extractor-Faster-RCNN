@@ -43,23 +43,14 @@ def best_corners(pred, score_thresh):
     return {CORNER_LABEL_TO_NAME[lbl]: ((b[0]+b[2])/2, (b[1]+b[3])/2)
             for lbl, (_, b) in best.items()}
 
-
-# def save_pair(img, stem, out_img_dir, src_xml, out_ann_dir):
-#     cv2.imwrite(str(Path(out_img_dir) / f"{stem}.jpg"), img)
-#     shutil.copy2(src_xml, Path(out_ann_dir) / f"{stem}.xml")
-
-
 def generate_corner_dataset(cfg, device):
     print("\n[Card -> Corner] Tao dataset corner...")
     model = load_model(cfg["card_weights"], num_classes=2, device=device,
                        score_thresh=cfg.get("score_thresh", 0.4))
 
     src_img = Path(cfg["img_dir"])
-    # src_ann = Path(cfg["ann_dir"])
     out_img = Path(cfg["out_img_dir"])
-    # out_ann = Path(cfg["out_ann_dir"])
     out_img.mkdir(parents=True, exist_ok=True)
-    # out_ann.mkdir(parents=True, exist_ok=True)
 
     ok = skip = 0
     for img_path in sorted(src_img.glob("*.[jp][pn]g")):
@@ -75,12 +66,6 @@ def generate_corner_dataset(cfg, device):
         x1, y1, x2, y2 = box
         h, w = padded.shape[:2]
         cropped = padded[max(0,y1):min(h,y2), max(0,x1):min(w,x2)]
-        # xml_path = src_ann / f"{img_path.stem}.xml"
-
-        # if cropped.size == 0 or not xml_path.exists():
-        #     skip += 1; continue
-
-        # save_pair(cropped, img_path.stem, out_img, xml_path, out_ann)
         cv2.imwrite(str(Path(out_img) / f"{img_path.stem}.jpg"), cropped)
         ok += 1
 
@@ -94,11 +79,8 @@ def generate_field_dataset(cfg, device):
                        score_thresh=cfg.get("score_thresh", 0.35))
 
     src_img = Path(cfg["img_dir"])
-    # src_ann = Path(cfg["ann_dir"])
     out_img = Path(cfg["out_img_dir"])
-    # out_ann = Path(cfg["out_ann_dir"])
     out_img.mkdir(parents=True, exist_ok=True)
-    # out_ann.mkdir(parents=True, exist_ok=True)
 
     ok = skip = 0
     for img_path in sorted(src_img.glob("*.[jp][pn]g")):
@@ -113,12 +95,6 @@ def generate_field_dataset(cfg, device):
             skip += 1; continue
 
         warped   = warp_perspective(img, corners)
-        # xml_path = src_ann / f"{img_path.stem}.xml"
-
-        # if warped is None or not xml_path.exists():
-        #     skip += 1; continue
-
-        # save_pair(warped, img_path.stem, out_img, xml_path, out_ann)
         cv2.imwrite(str(Path(out_img) / f"{img_path.stem}.jpg"), warped)
         ok += 1
 

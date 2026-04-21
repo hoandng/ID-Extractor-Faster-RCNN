@@ -7,17 +7,11 @@ import numpy as np
 import streamlit as st
 from PIL import Image
 
-# ─────────────────────────────────────────────────────────
-# Cau hinh trang
-# ─────────────────────────────────────────────────────────
 st.set_page_config(
     page_title = "CCCD Extractor",
     layout     = "wide",
 )
 
-# ─────────────────────────────────────────────────────────
-# CSS tuy chinh
-# ─────────────────────────────────────────────────────────
 st.markdown("""
 <style>
     /* Bo vien cho cac card ket qua */
@@ -57,10 +51,6 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-
-# ─────────────────────────────────────────────────────────
-# Load model (cache de khong load lai moi lan)
-# ─────────────────────────────────────────────────────────
 @st.cache_resource(show_spinner=False)
 def load_pipeline():
     """
@@ -81,9 +71,6 @@ def load_pipeline():
         return None, str(e)
 
 
-# ─────────────────────────────────────────────────────────
-# Ten hien thi cac truong
-# ─────────────────────────────────────────────────────────
 FIELD_DISPLAY = {
     "id":        "Số CCCD",
     "hoten":     "Họ và tên",
@@ -95,16 +82,12 @@ FIELD_DISPLAY = {
     "giatriden": "Có giá trị đến",
 }
 
-# Thu tu hien thi cac truong
 FIELD_ORDER = [
     "id", "hoten", "ngaysinh", "gioitinh",
     "quoctich", "quequan", "diachi", "giatriden",
 ]
 
 
-# ─────────────────────────────────────────────────────────
-# Trang 1: OCR
-# ─────────────────────────────────────────────────────────
 def page_ocr():
     st.title("")
     st.caption("Tải ảnh CCCD lên để trích xuất thông tin tự động")
@@ -121,7 +104,6 @@ def page_ocr():
     st.success("Model sẵn sàng", icon="✅")
     st.divider()
 
-    # ── Khu vuc upload ──────────────────────────────────
     col_upload, col_result = st.columns([1, 1], gap="large")
 
     with col_upload:
@@ -137,7 +119,6 @@ def page_ocr():
             img_pil = Image.open(uploaded)
             st.image(img_pil, caption="Ảnh đã upload", use_container_width=True)
 
-            # Nut xu ly
             if st.button("Trích xuất thông tin",
                          type="primary", use_container_width=True):
                 # Chuyen PIL -> numpy BGR cho OpenCV
@@ -154,7 +135,6 @@ def page_ocr():
                 st.session_state["elapsed"] = elapsed
                 st.session_state["img_pil"] = img_pil
 
-    # ── Hien thi ket qua ─────────────────────────────────
     with col_result:
         st.subheader("Kết quả")
 
@@ -166,7 +146,6 @@ def page_ocr():
         elapsed = st.session_state["elapsed"]
         status  = result.get("status")
 
-        # Hien thi trang thai
         if status == "success":
             st.markdown('<span class="badge-success"> Thành công</span>',
                         unsafe_allow_html=True)
@@ -186,7 +165,6 @@ def page_ocr():
 
             st.divider()
 
-            # Nut copy JSON
             st.download_button(
                 label     = "Tải kết quả JSON",
                 data      = json.dumps(data, ensure_ascii=False, indent=2),
@@ -214,9 +192,6 @@ def page_ocr():
             if "message" in result:
                 st.code(result["message"])
 
-# ─────────────────────────────────────────────────────────
-# Trang 2: Training Results
-# ─────────────────────────────────────────────────────────
 def page_training():
     st.title("Training Results")
     st.caption("Xem kết quả và đồ thị quá trình huấn luyện")
@@ -234,7 +209,6 @@ def page_training():
 
         col1, col2, col3 = st.columns(3)
 
-        # Kiem tra file ton tai
         has_best    = (wd / "best.pth").exists()
         has_plot    = (wd / "results.png").exists()
         has_kfold   = (wd / "kfold_results.png").exists()
@@ -244,7 +218,6 @@ def page_training():
         col2.metric("results.png",     "✅" if has_plot    else "❌ Chưa có")
         col3.metric("kfold_results",   "✅" if has_kfold   else "— Không dùng K-Fold")
 
-        # Hien thi do thi
         if has_plot or has_kfold:
             tab_labels = []
             if has_plot:  tab_labels.append("Epoch Chart")
@@ -275,7 +248,6 @@ def page_training():
             st.info(f"Chưa có kết quả. Chạy: `python train.py configs/"
                     f"{model_name.split()[0].lower()}.yaml`")
 
-        # K-Fold: hien thi ket qua tung fold
         fold_dirs = sorted(wd.glob("fold_*"))
         if fold_dirs:
             with st.expander(f"Xem chi tiết {len(fold_dirs)} fold"):
@@ -291,9 +263,6 @@ def page_training():
         st.divider()
 
 
-# ─────────────────────────────────────────────────────────
-# Navigation
-# ─────────────────────────────────────────────────────────
 def main():
     with st.sidebar:
         st.title("ID Extractor")

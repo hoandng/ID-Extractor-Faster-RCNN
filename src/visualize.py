@@ -9,11 +9,6 @@ import numpy as np
 COLORS = ["#2196F3", "#F44336", "#4CAF50", "#FF9800",
           "#9C27B0", "#00BCD4", "#795548"]
 
-
-# ──────────────────────────────────────────────
-# Confusion Matrix
-# ──────────────────────────────────────────────
-
 def plot_confusion_matrix(cm, class_names, title="Confusion Matrix"):
     """Vẽ Confusion Matrix chuẩn hóa. Trả về Figure (chưa lưu file)."""
     n       = len(class_names)
@@ -43,18 +38,7 @@ def plot_confusion_matrix(cm, class_names, title="Confusion Matrix"):
     plt.tight_layout()
     return fig
 
-
-# ──────────────────────────────────────────────
-# results.png — cập nhật sau mỗi epoch
-# ──────────────────────────────────────────────
-
 def save_epoch_plot(history, save_dir, label=""):
-    """
-    Vẽ 6 panel và lưu ra results.png (ghi đè sau mỗi epoch).
-
-    Panel: Train Loss | mAP@0.5 | mAP@0.5:0.95
-           mAR@100   | LR      | mAP@0.5 vs Best
-    """
     if len(history) < 2:
         return
 
@@ -114,17 +98,7 @@ def save_epoch_plot(history, save_dir, label=""):
     plt.close(fig)
 
 
-# ──────────────────────────────────────────────
-# kfold_results.png — sau khi K-Fold xong
-# ──────────────────────────────────────────────
-
 def save_kfold_plot(all_histories, save_dir, k):
-    """
-    Vẽ 4 panel tổng hợp K-Fold và lưu ra kfold_results.png.
-
-    Panel: mAP@0.5 theo epoch | Bar chart best mAP
-           mAR@100 theo epoch  | Box plot ổn định
-    """
     fig = plt.figure(figsize=(14, 10), facecolor="white")
     fig.suptitle(f"{k}-Fold Cross Validation Results",
                  fontsize=14, fontweight="bold", y=0.98)
@@ -154,7 +128,6 @@ def save_kfold_plot(all_histories, save_dir, k):
         ax3.plot(ep, mar, color=c, linewidth=1.5,
                  label=f"Fold {i+1}")
 
-    # Đường trung bình
     max_len   = max(len(c) for c in all_map_curves)
     padded    = [c + [c[-1]] * (max_len - len(c)) for c in all_map_curves]
     avg_curve = [sum(col) / len(col) for col in zip(*padded)]
@@ -171,7 +144,6 @@ def save_kfold_plot(all_histories, save_dir, k):
         ax.legend(fontsize=7.5, loc="lower right")
         ax.grid(True, alpha=0.3)
 
-    # Bar chart
     fold_labels = [f"Fold {i+1}" for i in range(k)]
     bars = ax2.bar(fold_labels, best_maps, color=COLORS[:k],
                    alpha=0.85, edgecolor="white", linewidth=1.2)
@@ -188,7 +160,6 @@ def save_kfold_plot(all_histories, save_dir, k):
     ax2.set_ylim(0, min(1.0, max(best_maps) * 1.15))
     ax2.legend(fontsize=9); ax2.grid(True, alpha=0.3, axis="y")
 
-    # Box plot
     TAIL     = 10
     box_data = [[r["map_50"] for r in h][-TAIL:] for h in all_histories]
     bp       = ax4.boxplot(box_data, labels=fold_labels,
@@ -211,43 +182,3 @@ def save_kfold_plot(all_histories, save_dir, k):
                 dpi=120, bbox_inches="tight", facecolor="white")
     plt.close(fig)
     print("  [OK] kfold_results.png")
-
-
-def save_kfold_summary(all_histories, all_maps, save_dir, k, model_name):
-    """Lưu báo cáo tổng hợp K-Fold dạng text."""
-    avg     = sum(all_maps) / len(all_maps)
-    std     = (sum((f - avg) ** 2 for f in all_maps) / len(all_maps)) ** 0.5
-    best_i  = all_maps.index(max(all_maps))
-    worst_i = all_maps.index(min(all_maps))
-
-    lines = [
-        "=" * 55,
-        "K-FOLD CROSS VALIDATION SUMMARY",
-        f"Model : {model_name}  |  K = {k}",
-        "=" * 55,
-    ]
-    for i, (m, h) in enumerate(zip(all_maps, all_histories)):
-        maps    = [r["map_50"] for r in h]
-        best_ep = h[maps.index(max(maps))]["epoch"]
-        lines.append(f"  Fold {i+1:2d} : mAP@0.5 = {m:.4f}"
-                     f"  (best tại epoch {best_ep}/{h[-1]['epoch']})")
-    lines += [
-        "-" * 55,
-        f"  Trung bình : {avg:.4f}  |  Std : {std:.4f}"
-        f"  {'← ổn định' if std < 0.02 else '← dao động cao'}",
-        f"  Best  : Fold {best_i+1}   (mAP@0.5 = {max(all_maps):.4f})",
-        f"  Worst : Fold {worst_i+1}  (mAP@0.5 = {min(all_maps):.4f})",
-        "-" * 55,
-        ("  Std < 0.01  → Model rất ổn định." if std < 0.01 else
-         "  Std < 0.03  → Ổn định ở mức chấp nhận được." if std < 0.03 else
-         "  Std ≥ 0.03  → Nên tăng dữ liệu hoặc giảm LR."),
-        "=" * 55,
-        f"  Weights tốt nhất : {save_dir}/best.pth  (Fold {best_i+1})",
-        "=" * 55,
-    ]
-    with open(Path(save_dir) / "kfold_summary.txt", "w",
-              encoding="utf-8") as f:
-        f.write("\n".join(lines))
-    print("  [OK] kfold_summary.txt")
-    for line in lines:
-        print(line)

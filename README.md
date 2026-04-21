@@ -12,11 +12,9 @@ An automated system for extracting information from photos of **Vietnamese ID ca
 - [Installation](#installation)
 - [Data Preparation](#data-preparation)
 - [Training](#training)
-- [Automatic Dataset Generation](#automatic-dataset-generation)
 - [Inference](#inference)
 - [Web Interface](#web-interface)
 - [Training Results](#training-results)
-- [Technical Details](#technical-details)
 
 ---
 
